@@ -292,6 +292,11 @@ export default function Index() {
   const [addOpen, setAddOpen] = useState(false);
   const navigate = useNavigate();
 
+  const storedUser = (() => { try { const u = localStorage.getItem("tradehub_user"); return u ? JSON.parse(u) : null; } catch { return null; } })();
+  const [user, setUser] = useState<{ name: string; avatar: string; provider: string } | null>(storedUser);
+
+  const handleLogout = () => { localStorage.removeItem("tradehub_user"); setUser(null); };
+
   const t = LANGS[lang];
 
   const toggleDark = () => {
@@ -385,6 +390,15 @@ export default function Index() {
               {t.addProduct}
             </Button>
 
+            {/* Import button */}
+            <button
+              onClick={() => navigate("/import")}
+              className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+              title="Массовый импорт товаров"
+            >
+              <Icon name="Upload" size={16} />
+            </button>
+
             {/* Dashboard dropdown */}
             <div className="relative group">
               <button className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-secondary transition-colors" title="Кабинеты">
@@ -416,8 +430,54 @@ export default function Index() {
                     <div className="text-[10px] text-muted-foreground">Финансы, команда, функции</div>
                   </div>
                 </button>
+                <div className="border-t border-border" />
+                <button
+                  onClick={() => navigate("/import")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-secondary text-left transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Upload" size={14} className="text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Массовый импорт</div>
+                    <div className="text-[10px] text-muted-foreground">CSV, JSON, XML, ссылка</div>
+                  </div>
+                </button>
               </div>
             </div>
+
+            {/* User avatar / login */}
+            {user ? (
+              <div className="relative group">
+                <button className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm" title={user.name}>
+                  {user.avatar}
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 overflow-hidden">
+                  <div className="px-3 py-2.5 border-b border-border">
+                    <div className="text-sm font-medium truncate">{user.name}</div>
+                    <div className="text-[10px] text-muted-foreground">{user.provider}</div>
+                  </div>
+                  <button onClick={() => navigate("/seller")} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-secondary text-left text-sm transition-colors">
+                    <Icon name="Store" size={13} className="text-muted-foreground" /> Мои товары
+                  </button>
+                  <button onClick={() => navigate("/import")} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-secondary text-left text-sm transition-colors">
+                    <Icon name="Upload" size={13} className="text-muted-foreground" /> Импорт товаров
+                  </button>
+                  <div className="border-t border-border" />
+                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-left text-sm text-red-500 transition-colors">
+                    <Icon name="LogOut" size={13} /> Выйти
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/auth")}
+                className="flex items-center gap-1.5 px-3 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+              >
+                <Icon name="LogIn" size={14} />
+                <span className="hidden sm:block">Войти</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
