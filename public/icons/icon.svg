@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a2e4a"/>
+  <rect x="48" y="48" width="416" height="416" rx="72" fill="#1e3a5f"/>
+  <!-- Shopping bag icon -->
+  <path d="M176 192h160l-20 144H196z" fill="none" stroke="#f59e0b" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M216 192v-24a40 40 0 0 1 80 0v24" fill="none" stroke="#f59e0b" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="232" cy="248" r="8" fill="#f59e0b"/>
+  <circle cx="280" cy="248" r="8" fill="#f59e0b"/>
+  <!-- TH letters -->
+  <text x="256" y="410" font-family="serif" font-weight="700" font-size="72" fill="#f59e0b" text-anchor="middle" letter-spacing="2">TH</text>
+</svg>

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Badge } from "@/components/ui/badge";
@@ -278,6 +278,11 @@ const PRODUCTS = [
 
 type LangKey = keyof typeof LANGS;
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => void;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 const CATEGORY_ICONS = ["🛍️", "📱", "👗", "🚗", "🏠", "⚽", "💄", "👶", "🛋️", "🍕", "🐾", "🎨", "📚", "📦"];
 
 export default function Index() {
@@ -296,6 +301,51 @@ export default function Index() {
   const [user, setUser] = useState<{ name: string; avatar: string; provider: string } | null>(storedUser);
 
   const handleLogout = () => { localStorage.removeItem("tradehub_user"); setUser(null); };
+
+  // PWA install prompt
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      return;
+    }
+    // Detect iOS
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream;
+    setIsIOS(ios);
+    if (ios) {
+      const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
+      if (!dismissed) setTimeout(() => setShowInstallBanner(true), 3000);
+    }
+    // Android/Desktop Chrome
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
+      if (!dismissed) setTimeout(() => setShowInstallBanner(true), 2000);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      (installPrompt as BeforeInstallPromptEvent).prompt();
+      const result = await (installPrompt as BeforeInstallPromptEvent).userChoice;
+      if (result.outcome === 'accepted') setIsInstalled(true);
+      setShowInstallBanner(false);
+      setInstallPrompt(null);
+    }
+  };
+
+  const dismissBanner = () => {
+    setShowInstallBanner(false);
+    sessionStorage.setItem('pwa-banner-dismissed', '1');
+  };
 
   const t = LANGS[lang];
 
@@ -812,6 +862,67 @@ export default function Index() {
         </DialogContent>
       </Dialog>
 
+      {/* PWA INSTALL BANNER */}
+      {showInstallBanner && !isInstalled && (
+        <div className="fixed bottom-4 left-4 right-4 z-50 animate-fade-in">
+          <div className="max-w-md mx-auto bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div className="gradient-hero p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Icon name="ShoppingBag" size={24} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-white text-sm" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  Установить TradeHub
+                </div>
+                <div className="text-white/75 text-xs mt-0.5">
+                  {isIOS ? "Нажмите «Поделиться» → «На экран Домой»" : "Добавить на главный экран как приложение"}
+                </div>
+              </div>
+              <button onClick={dismissBanner} className="text-white/70 hover:text-white flex-shrink-0 ml-1">
+                <Icon name="X" size={18} />
+              </button>
+            </div>
+            <div className="px-4 py-3 bg-card">
+              {isIOS ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 bg-secondary rounded-lg px-3 py-2">
+                      <Icon name="Share" size={14} className="text-blue-500" />
+                      <span>Нажмите кнопку «Поделиться» внизу браузера</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-secondary rounded-lg px-3 py-2 text-xs text-muted-foreground">
+                    <Icon name="PlusSquare" size={14} className="text-blue-500" />
+                    <span>Выберите «На экран "Домой"»</span>
+                  </div>
+                  <button onClick={dismissBanner} className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">
+                    Закрыть
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="text-xs text-muted-foreground">Работает без интернета · Быстрый запуск · Android, Windows, Mac</div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={dismissBanner} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-secondary transition-colors">
+                      Позже
+                    </button>
+                    <button
+                      onClick={handleInstall}
+                      className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+                    >
+                      <Icon name="Download" size={13} />
+                      Установить
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FOOTER */}
       <footer className="bg-card border-t border-border mt-12 py-8 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -836,6 +947,21 @@ export default function Index() {
           </div>
           <span className="text-xs text-muted-foreground">© 2024 {t.siteName}. {t.footer}</span>
         </div>
+        {!isInstalled && (installPrompt || isIOS) && (
+          <div className="max-w-7xl mx-auto mt-5 pt-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon name="Smartphone" size={16} />
+              <span>Доступно как приложение для Android, iOS, Windows, macOS</span>
+            </div>
+            <button
+              onClick={isIOS ? () => setShowInstallBanner(true) : handleInstall}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border hover:bg-secondary text-sm font-medium transition-colors"
+            >
+              <Icon name="Download" size={15} className="text-primary" />
+              Установить приложение
+            </button>
+          </div>
+        )}
       </footer>
     </div>
   );
