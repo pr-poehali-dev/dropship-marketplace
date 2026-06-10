@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -289,6 +290,7 @@ export default function Index() {
   const [selectedBank, setSelectedBank] = useState("");
   const [detailProduct, setDetailProduct] = useState<(typeof PRODUCTS)[0] | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const navigate = useNavigate();
 
   const t = LANGS[lang];
 
@@ -382,6 +384,40 @@ export default function Index() {
               <Icon name="Plus" size={14} />
               {t.addProduct}
             </Button>
+
+            {/* Dashboard dropdown */}
+            <div className="relative group">
+              <button className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-secondary transition-colors" title="Кабинеты">
+                <Icon name="LayoutDashboard" size={16} />
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 overflow-hidden">
+                <button
+                  onClick={() => navigate("/seller")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-secondary text-left transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Store" size={14} className="text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Кабинет продавца</div>
+                    <div className="text-[10px] text-muted-foreground">Товары, заказы, выручка</div>
+                  </div>
+                </button>
+                <div className="border-t border-border" />
+                <button
+                  onClick={() => navigate("/owner")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-secondary text-left transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <Icon name="Crown" size={14} className="text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Панель владельца</div>
+                    <div className="text-[10px] text-muted-foreground">Финансы, команда, функции</div>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
